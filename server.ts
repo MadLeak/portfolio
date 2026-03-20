@@ -17,6 +17,7 @@ try {
 const PVE_HOST = process.env.PVE_HOST ?? ''
 const PVE_TOKEN = process.env.PVE_TOKEN ?? ''
 const PVE_NODE = process.env.PVE_NODE ?? 'pve'
+const PORT = Number(process.env.PORT ?? 3001)
 
 console.log('[boot] HOST  =', PVE_HOST || '⚠ MISSING')
 console.log('[boot] TOKEN =', PVE_TOKEN ? '✓' : '⚠ MISSING')
@@ -140,7 +141,7 @@ async function getTelemetry() {
 }
 
 Bun.serve({
-  port: 3001,
+  port: PORT,
   async fetch(req: Request) {
     const url = new URL(req.url)
 
@@ -167,4 +168,4 @@ Bun.serve({
   },
 })
 
-console.log(`[boot] server ready → http://localhost:3001/api/telemetry`)
+console.log(`[boot] server ready → http://localhost:${PORT}/api/telemetry`)
