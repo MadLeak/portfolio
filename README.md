@@ -1,74 +1,100 @@
-# React + TypeScript + Vite
+# Adhonys Diaz Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio built with React + TypeScript on Vite, with a Bun-powered telemetry API for Proxmox metrics.
 
-Currently, two official plugins are available:
+This repository is Bun-first.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- Frontend: React 19, TypeScript, Vite 8, Tailwind CSS 4, HeroUI
+- Routing: React Router
+- i18n: i18next + react-i18next (EN/ES)
+- Backend telemetry: Bun (`server.ts`)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requirements
 
-## Expanding the ESLint configuration
+- Bun 1.3+
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Node.js is not required for normal development in this repo.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Quick Start
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Install dependencies:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Create `.env.local` in the project root:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+PVE_HOST=https://your-proxmox-host:8006
+PVE_TOKEN=your-user@pam!tokenid=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+PVE_NODE=pve
+VITE_TELEMETRY_URL=http://localhost:3001/api/telemetry
 ```
-# portfolio
+
+3. Start frontend + telemetry API:
+
+```bash
+bun run dev
+```
+
+Default ports:
+
+- Frontend (Vite): `http://localhost:5173`
+- Telemetry API (Bun): `http://localhost:3001`
+
+## Scripts (Bun)
+
+- `bun run dev`: Starts Vite and telemetry API in parallel.
+- `bun run server`: Starts only the telemetry API.
+- `bun run build`: Runs TypeScript build and Vite production bundle.
+- `bun run preview`: Serves the production frontend build.
+
+## Telemetry API
+
+Entry point: `server.ts`
+
+Endpoint:
+
+```text
+GET /api/telemetry
+```
+
+Response includes:
+
+- CPU (usage, cores, load average)
+- RAM, disk, and swap utilization
+- Uptime, kernel, and Proxmox version
+- LXC container states and resource usage
+- Estimated temperature value
+
+If Proxmox cannot be reached or credentials are invalid, the endpoint returns `503` with an error payload.
+
+## Frontend Behavior
+
+- Telemetry widget polls `VITE_TELEMETRY_URL` every 5 seconds.
+- If telemetry URL is missing, widget remains disconnected.
+- Language is auto-detected and cached in local storage.
+
+## Project Layout
+
+```text
+src/
+  components/   shared UI components
+  modules/      route-level sections (hero/about/projects/experience/contact)
+  hooks/        custom hooks (telemetry polling)
+  i18n/         i18n setup + locale dictionaries
+  data/         CV/profile data
+server.ts       Bun telemetry service
+```
+
+## Current Status
+
+- Repository currently contains both `bun.lock` and `package-lock.json`.
+- For consistency, use Bun commands and keep `bun.lock` as the source of truth.
+
+## License
+
+Personal portfolio repository.
