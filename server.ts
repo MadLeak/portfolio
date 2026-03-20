@@ -1,6 +1,6 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { resolve } from 'path'
 
 try {
@@ -17,6 +17,9 @@ try {
 const PVE_HOST = process.env.PVE_HOST ?? ''
 const PVE_TOKEN = process.env.PVE_TOKEN ?? ''
 const PVE_NODE = process.env.PVE_NODE ?? 'pve'
+const PORT = Number(process.env.PORT ?? 3001)
+const DIST_DIR = resolve(process.cwd(), 'dist')
+const INDEX_FILE = resolve(DIST_DIR, 'index.html')
 
 console.log('[boot] HOST  =', PVE_HOST || '⚠ MISSING')
 console.log('[boot] TOKEN =', PVE_TOKEN ? '✓' : '⚠ MISSING')
@@ -139,8 +142,24 @@ async function getTelemetry() {
   }
 }
 
+function contentType(pathname: string) {
+  if (pathname.endsWith('.js')) return 'application/javascript; charset=utf-8'
+  if (pathname.endsWith('.css')) return 'text/css; charset=utf-8'
+  if (pathname.endsWith('.json')) return 'application/json; charset=utf-8'
+  if (pathname.endsWith('.svg')) return 'image/svg+xml'
+  if (pathname.endsWith('.png')) return 'image/png'
+  if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) return 'image/jpeg'
+  if (pathname.endsWith('.webp')) return 'image/webp'
+  if (pathname.endsWith('.ico')) return 'image/x-icon'
+  if (pathname.endsWith('.woff2')) return 'font/woff2'
+  if (pathname.endsWith('.woff')) return 'font/woff'
+  if (pathname.endsWith('.ttf')) return 'font/ttf'
+  if (pathname.endsWith('.html')) return 'text/html; charset=utf-8'
+  return 'application/octet-stream'
+}
+
 Bun.serve({
-  port: 3001,
+  port: PORT,
   async fetch(req: Request) {
     const url = new URL(req.url)
 
@@ -163,8 +182,35 @@ Bun.serve({
       }
     }
 
-    return new Response('Not found', { status: 404 })
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return new Response('Method not allowed', { status: 405 })
+    }
+
+    const requested = url.pathname === '/' ? '/index.html' : url.pathname
+    const staticPath = resolve(DIST_DIR, `.${requested}`)
+
+    if (!staticPath.startsWith(DIST_DIR)) {
+      return new Response('Forbidden', { status: 403 })
+    }
+
+    if (existsSync(staticPath)) {
+      return new Response(Bun.file(staticPath), {
+        headers: {
+          'Content-Type': contentType(staticPath),
+        },
+      })
+    }
+
+    if (existsSync(INDEX_FILE)) {
+      return new Response(Bun.file(INDEX_FILE), {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+        },
+      })
+    }
+
+    return new Response('Build not found. Run bun run build first.', { status: 503 })
   },
 })
 
-console.log(`[boot] server ready → http://localhost:3001/api/telemetry`)
+console.log(`[boot] server ready → http://localhost:${PORT}`)

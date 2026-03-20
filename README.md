@@ -52,6 +52,29 @@ Default ports:
 - `bun run build`: Runs TypeScript build and Vite production bundle.
 - `bun run preview`: Serves the production frontend build.
 
+## Deploy on Coolify (Nixpacks)
+
+This repository includes `nixpacks.toml` for Coolify.
+
+Use these application settings:
+
+- Build Pack: Nixpacks
+- Base Directory: repository root (`/`)
+- Internal Port: `3001`
+- Start Command: from `nixpacks.toml` (`bun run server`)
+
+Required environment variables:
+
+- `PVE_HOST`
+- `PVE_TOKEN`
+- `PVE_NODE`
+
+Notes:
+
+- The server uses `PORT` from environment, with fallback to `3001`.
+- The service serves both the built frontend (`dist`) and `/api/telemetry`.
+- If Coolify shows `Permission denied (publickey)` while cloning, fix repository authentication in Coolify (SSH deploy key or HTTPS + token) before redeploying.
+
 ## Telemetry API
 
 Entry point: `server.ts`
